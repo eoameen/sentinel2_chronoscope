@@ -1,0 +1,11 @@
+*.pyc
+.DS_Store
+.DS*
+__pycache__/
+.mypy_cache
+*.py[cod]
+.pytest_cache
+.vscode
+.ipynb
+data/
+notebooks/
