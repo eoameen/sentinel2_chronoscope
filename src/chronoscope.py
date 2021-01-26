@@ -5,7 +5,6 @@ import os
 import glob
 import tempfile
 
-import xml.etree.ElementTree as et
 import numpy as np
 from shapely import geometry
 import rasterio
@@ -62,15 +61,15 @@ def get_scene_footprint(band_path: str) -> geometry.polygon.Polygon:
 
 def check_window(
     footprint: geometry.polygon.Polygon,
-    bounds: Tuple
-    ) -> bool:
+    bounds: Tuple) -> bool:
     """check if input window is inside scene"""
     window = geometry.Polygon(
         [[bounds[2], bounds[1]],
          [bounds[2], bounds[3]],
          [bounds[0], bounds[3]],
          [bounds[0], bounds[1]]
-        ])
+        ]
+        )
     return footprint.contains(window)
 
 
@@ -78,8 +77,7 @@ def load_crop(
     band_path: str,
     bounds: Tuple,
     resample_flag: bool,
-    scale_factor: float
-    ) -> np.ndarray:
+    scale_factor: float) -> np.ndarray:
     """return a raster crop given band path and window"""
     # convert bounds from lat/lon to meters
     with rasterio.open(band_path) as src:
@@ -98,8 +96,6 @@ def load_crop(
     )
     # load crop
     with rasterio.open(band_path) as dataset:
-        width = dataset.width
-        height = dataset.height
         crop = dataset.read(
             1,
             window=from_bounds(
@@ -175,7 +171,6 @@ def chronoscope(scene: str, fps: int, window: List[float], output: str) -> str:
     gif_path = make_gif(frames, os.path.join(output, "scene.gif"), fps)
     logging.info(f"animated gif wriiten to: {gif_path}")
     return gif_path
-
 
 
 if __name__ == "__main__":
