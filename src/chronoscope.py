@@ -14,16 +14,19 @@ import cv2
 import imageio
 
 import logging
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
-# list of bands and their order in final animation
+# list of bands ordered chronologically
 bands = [
-#     "R20m/B12.jp2",
+    "R60m/B09.jp2",
+    "R60m/B01.jp2",
+    #     "R20m/B12.jp2",
     "R20m/B8A.jp2",
     "R20m/B07.jp2",
     "R20m/B06.jp2",
-#     "R20m/B11.jp2",
+    #     "R20m/B11.jp2",
     "R20m/B05.jp2",
     "R10m/B04.jp2",
     "R10m/B03.jp2",
@@ -31,7 +34,7 @@ bands = [
     "R10m/B02.jp2",
     "R10m/B02.jp2",
     "R10m/B02.jp2",
-    "R10m/B02.jp2"
+    "R10m/B02.jp2",
 ]
 
 
@@ -40,70 +43,57 @@ def get_scene_footprint(band_path: str) -> geometry.polygon.Polygon:
     with rasterio.open(band_path) as dataset:
         footprint = dataset.bounds
         mins = warp.transform(
-            dataset.crs,
-            {"init": "epsg:4326"},
-            [dataset.bounds[0]], [dataset.bounds[1]]
-            )
+            dataset.crs, {"init": "epsg:4326"}, [dataset.bounds[0]],
+            [dataset.bounds[1]]
+        )
         maxs = warp.transform(
-            dataset.crs,
-            {"init": "epsg:4326"},
-            [dataset.bounds[2]], [dataset.bounds[3]]
-            )
+            dataset.crs, {"init": "epsg:4326"}, [dataset.bounds[2]],
+            [dataset.bounds[3]]
+        )
     # return footprint as polygon
-    footprint = geometry.Polygon([
-        [mins[0][0], maxs[1][0]],
-        [maxs[0][0], maxs[1][0]],
-        [maxs[0][0], mins[1][0]],
-        [mins[0][0], mins[1][0]]]
+    footprint = geometry.Polygon(
+        [
+            [mins[0][0], maxs[1][0]],
+            [maxs[0][0], maxs[1][0]],
+            [maxs[0][0], mins[1][0]],
+            [mins[0][0], mins[1][0]],
+        ]
     )
     return footprint
 
 
-def check_window(
-    footprint: geometry.polygon.Polygon,
-    bounds: Tuple) -> bool:
+def check_window(footprint: geometry.polygon.Polygon, bounds: Tuple) -> bool:
     """check if input window is inside scene"""
     window = geometry.Polygon(
-        [[bounds[2], bounds[1]],
-         [bounds[2], bounds[3]],
-         [bounds[0], bounds[3]],
-         [bounds[0], bounds[1]]
+        [
+            [bounds[2], bounds[1]],
+            [bounds[2], bounds[3]],
+            [bounds[0], bounds[3]],
+            [bounds[0], bounds[1]],
         ]
-        )
+    )
     return footprint.contains(window)
 
 
 def load_crop(
-    band_path: str,
-    bounds: Tuple,
-    resample_flag: bool,
-    scale_factor: float) -> np.ndarray:
+    band_path: str, bounds: Tuple, resample_flag: bool, scale_factor: float
+) -> np.ndarray:
     """return a raster crop given band path and window"""
     # convert bounds from lat/lon to meters
     with rasterio.open(band_path) as src:
         crs_data = src.crs.data
-    mins = warp.transform(
-        {"init": "epsg:4326"},
-        crs_data,
-        [bounds[0]],
-        [bounds[1]]
-    )
-    maxs = warp.transform(
-        {"init": "epsg:4326"},
-        crs_data,
-        [bounds[2]],
-        [bounds[3]]
-    )
+    mins = warp.transform({"init": "epsg:4326"}, crs_data, [bounds[0]],
+                          [bounds[1]])
+    maxs = warp.transform({"init": "epsg:4326"}, crs_data, [bounds[2]],
+                          [bounds[3]])
     # load crop
     with rasterio.open(band_path) as dataset:
         crop = dataset.read(
             1,
             window=from_bounds(
-                mins[0][0],
-                mins[1][0],
-                maxs[0][0],
-                maxs[1][0],
-                dataset.transform)
+                mins[0][0], mins[1][0], maxs[0][0], maxs[1][0],
+                dataset.transform
+            ),
         )
     # upsample bands with GSD > 10m
     if resample_flag:
@@ -111,9 +101,9 @@ def load_crop(
             crop,
             dsize=(
                 int(scale_factor * np.shape(crop)[1]),
-                int(scale_factor * np.shape(crop)[0])
+                int(scale_factor * np.shape(crop)[0]),
             ),
-            interpolation=cv2.INTER_CUBIC
+            interpolation=cv2.INTER_CUBIC,
         )
     return crop
 
@@ -121,9 +111,9 @@ def load_crop(
 def scale_down(img: np.ndarray) -> np.ndarray:
     """scale down pixel values to 8 bit"""
     (mean, std) = cv2.meanStdDev(img)
-    maxval = (mean[0][0] + 2.0 * std[0][0])
+    maxval = mean[0][0] + 2.0 * std[0][0]
     img = cv2.convertScaleAbs(img, alpha=(255 / maxval)).astype(np.uint8)
-    return(img)
+    return img
 
 
 def make_gif(frames: List[np.ndarray], output_path: str, fps: int) -> str:
@@ -134,7 +124,7 @@ def make_gif(frames: List[np.ndarray], output_path: str, fps: int) -> str:
             frame = scale_down(frames[i])
             cv2.imwrite(os.path.join(tmp_dir, "{:02d}.png").format(i), frame)
             images = []
-            for filename in sorted(glob.glob(os.path.join(tmp_dir, '*.png'))):
+            for filename in sorted(glob.glob(os.path.join(tmp_dir, "*.png"))):
                 images.append(imageio.imread(filename))
             imageio.mimsave(output_path, images, duration=float(1 / fps))
     return output_path
@@ -149,7 +139,7 @@ def prep_frames(bands: List, scene: str, bounds: Tuple) -> np.ndarray:
         elif band.split("/")[0] == "R20m":
             crop = load_crop(os.path.join(scene, band), bounds, True, 2.0)
         else:
-            crop = load_crop(os.path.join(scene, band), bounds, True, 3.0)
+            crop = load_crop(os.path.join(scene, band), bounds, True, 6.0)
         # make sure all frames have same dimensions after resampling
         if i == 0:
             h, w = np.shape(crop)
@@ -169,24 +159,18 @@ def chronoscope(scene: str, fps: int, window: List[float], output: str) -> str:
     os.makedirs(output, exist_ok=True)
     frames = prep_frames(bands, scene, tuple(window))
     gif_path = make_gif(frames, os.path.join(output, "scene.gif"), fps)
-    logging.info(f"animated gif wriiten to: {gif_path}")
+    logging.info(f"animated gif written to: {gif_path}")
     return gif_path
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-s",
-        "--scene",
-        help="path to S2 scene directory",
-        type=str,
+        "-s", "--scene", help="path to S2-L2A scene directory", type=str,
         required=True,
     )
     parser.add_argument(
-        "-f",
-        "--frame_rate",
-        help="frames per second (fps)",
-        type=int,
+        "-f", "--frame_rate", help="frames per second (fps)", type=int,
         default=5,
     )
     parser.add_argument(
@@ -195,7 +179,7 @@ if __name__ == "__main__":
         type=float,
         nargs="*",
         help="bounds (Xmin Ymin Xmax Ymax) in lat/lon",
-        required=True
+        required=True,
     )
     parser.add_argument(
         "-o",

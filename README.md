@@ -1,5 +1,5 @@
-# Sentinel-2: Chronoscope
-A tool for generating ~2 second monochrome gif from a single Sentinel-2 scene.
+# Sentinel-2: [Chronoscope](https://en.wikipedia.org/wiki/The_Dead_Past)
+A tool for generating ~2.5 sec animated gif from a single Sentinel-2 scene.
 
 ## Disclaimer
 This tool was inspired by [Samuel Bancroft](https://twitter.com/Spiruel)'s [work](https://twitter.com/Spiruel/status/1331279630037299200).
@@ -10,6 +10,8 @@ docker build -t sentinel2-chronoscope .
 ```
 
 ## Usage
+Given 1) Sentinel-2 L2A scene path, 2) frame rate (default set to 3 fps), 3) spatial window (Xmin Ymin Xmax Ymax), and 4) path to output directory (default set to `output`), this tool generates a 2.5-second-long video written to `<OUTPUT>/scene.gif`.
+
 ```sh
 docker run --rm -it -v `pwd`:/workspace sentinel2-chronoscope python3 src/chronoscope.py --help
 ```
