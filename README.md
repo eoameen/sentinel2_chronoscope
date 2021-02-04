@@ -16,12 +16,13 @@ Given 1) Sentinel-2 L2A scene path, 2) frame rate (default set to 3 fps), 3) spa
 docker run --rm -it -v `pwd`:/workspace sentinel2-chronoscope python3 src/chronoscope.py --help
 ```
 ```
-usage: chronoscope.py [-h] -s SCENE [-f FRAME_RATE] -w [WINDOW [WINDOW ...]] [-o OUTPUT]
+usage: chronoscope.py [-h] -s SCENE [-f FRAME_RATE] -w [WINDOW [WINDOW ...]]
+                      [-o OUTPUT]
 
 optional arguments:
   -h, --help            show this help message and exit
   -s SCENE, --scene SCENE
-                        path to S2 scene directory
+                        path to S2-L2A scene directory
   -f FRAME_RATE, --frame_rate FRAME_RATE
                         frames per second (fps)
   -w [WINDOW [WINDOW ...]], --window [WINDOW [WINDOW ...]]
