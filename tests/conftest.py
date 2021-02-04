@@ -1,0 +1,4 @@
+INVALID_WINDOW = [35.0, 100.0, 36.0, 101.0]
+VALID_WINDOW = [153.31, -29.585, 153.37, -29.545]
+SCENE_PATH = "tests/data/"
+BAND_PATH = "tests/data/R10m/B02.jp2"

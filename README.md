@@ -58,7 +58,7 @@ docker run --rm -it \
 
 1. Download scene from AWS (Setup your AWS account first):
 ```bash
-aws s3 sync s3://sentinel-s2-l2a/tiles/56/J/NN/2019/9/8/0/ data2/ --request-payer requester
+aws s3 sync s3://sentinel-s2-l2a/tiles/56/J/NN/2019/9/8/0/ data/ --request-payer requester
 ```
 
 2. Generate video from scene:
@@ -104,12 +104,18 @@ docker run \
 ```
 
 ## Testing
-TBD
-<!-- ```bash
+
+1. Download test data:
+```bash
+aws s3 sync s3://sentinel-s2-l2a/tiles/56/J/NN/2019/9/8/0/ tests/data/ --request-payer requester
+```
+
+2. Run tests:
+```bash
 docker run \
     --rm -it \
     -v `pwd`:/workspace \
     -e "PYTHONPATH=." \
     sentinel2-chronoscope /bin/bash -c \
         "pip3 install -r requirements-dev.txt && pytest tests"
-``` -->
+```
